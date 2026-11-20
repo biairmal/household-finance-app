@@ -1,0 +1,10 @@
+{
+  "short_name": "Household Money",
+  "name": "Household Money",
+  "icons": [{ "src": "/icon-512.png", "type": "image/png", "sizes": "512x512" }],
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#0A9F5A",
+  "background_color": "#ffffff"
+}
