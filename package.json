@@ -41,7 +41,7 @@
     "lint": "expo lint",
     "test": "jest",
     "build:web": "expo export -p web && workbox generateSW workbox-config.js",
-    "build:android": "eas build -p android --profile preview --local"
+    "build:android": "eas build -p android --profile preview"
   },
   "private": true,
   "jest": {
