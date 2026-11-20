@@ -1,4 +1,5 @@
 import { verifyGoogleIdToken } from './auth';
+import { handleExtract } from './extract';
 
 export interface Env {
   GOOGLE_CLIENT_ID: string;
@@ -62,7 +63,8 @@ async function route(req: Request, env: Env): Promise<Response> {
     const auth = req.headers.get('Authorization') ?? '';
     const user = auth.startsWith('Bearer ') ? await verifyGoogleIdToken(auth.slice(7), env.GOOGLE_CLIENT_ID) : null;
     if (!user) return json({ error: 'unauthorized' }, 401);
-    return json({ error: 'not_implemented' }, 501);
+    // shortcut: no per-user daily limit yet (spec §7.4), add a hashed-user-id counter in Plan 4 before real use.
+    return handleExtract(req, env);
   }
 
   return json({ error: 'not_found' }, 404);

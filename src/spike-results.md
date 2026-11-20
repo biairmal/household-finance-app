@@ -50,7 +50,7 @@ Backend: expo-sqlite web (wa-sqlite wasm + OPFS in a worker; needs COOP/COEP hea
 
 | Step | Result | Notes |
 |---|---|---|
-| `/extract` tests with Gemini mocked | PENDING | |
+| `/extract` tests with Gemini mocked | PASS | pass-through, 502 on malformed/invalid rows, 400 on 0 or >10 images, 401 before any model call |
 | 20 real screenshots scored (≥95% rows right on amount, date, direction) | PENDING | |
 
 ## Task 6: calendar reminders
