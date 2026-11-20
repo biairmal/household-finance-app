@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pick household folder</title>
+  </head>
+  <body style="font-family: system-ui; padding: 24px">
+    <!--
+      Task 4 spike. A static page so public/_headers can switch off cross-origin isolation for it:
+      the Google Picker iframe may not load under COEP. The drive spike passes
+      #token=<access token>&key=<api key>&appId=<project number> in the fragment (never sent to a server).
+    -->
+    <p id="status">crossOriginIsolated: <span id="coi"></span></p>
+    <button id="open" style="font-size: 18px; padding: 8px 16px">Open Google Picker</button>
+    <script>
+      const p = new URLSearchParams(location.hash.slice(1));
+      history.replaceState(null, '', location.pathname); // drop the token from the address bar
+      document.getElementById('coi').textContent = String(self.crossOriginIsolated);
+      const fail = (e) => (document.getElementById('status').textContent = 'FAILED: ' + e);
+
+      document.getElementById('open').onclick = () => {
+        const s = document.createElement('script');
+        s.src = 'https://apis.google.com/js/api.js';
+        s.onerror = () => fail('api.js did not load');
+        s.onload = () =>
+          gapi.load('picker', {
+            onerror: fail,
+            callback: () => {
+              const view = new google.picker.DocsView(google.picker.ViewId.FOLDERS)
+                .setIncludeFolders(true)
+                .setSelectFolderEnabled(true)
+                .setMimeTypes('application/vnd.google-apps.folder');
+              new google.picker.PickerBuilder()
+                .addView(view)
+                .setOAuthToken(p.get('token'))
+                .setDeveloperKey(p.get('key'))
+                .setAppId(p.get('appId'))
+                .setOrigin(location.origin)
+                .setCallback((data) => {
+                  if (data.action !== google.picker.Action.PICKED) return;
+                  localStorage.setItem('spike.householdId', data.docs[0].id);
+                  location.assign('/spikes/drive');
+                })
+                .build()
+                .setVisible(true);
+            },
+          });
+        document.head.appendChild(s);
+      };
+    </script>
+  </body>
+</html>

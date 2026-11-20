@@ -44,7 +44,7 @@ Backend: expo-sqlite web (wa-sqlite wasm + OPFS in a worker; needs COOP/COEP hea
 | 2. Wife opens Picker, selects folder, reads `0001.jsonl` | PENDING | |
 | 3. Wife creates `ops/wife-phone/0001.jsonl`; Bia reads it | PENDING | |
 | 4. **Bia creates `0002.jsonl` later; wife lists + reads it without the Picker** | PENDING | critical check |
-| Picker loads inside the cross-origin-isolated page (COEP credentialless) | PENDING | if not, see the note in `src/app/spikes/drive.tsx` |
+| Picker loads on `/picker` (served WITHOUT cross-origin isolation, checked locally: `crossOriginIsolated: false`) | PENDING | if the real app must open the Picker inside the isolated page, test that separately |
 
 ## Task 5: screenshot extraction (spec §10.4)
 

@@ -15,7 +15,7 @@ const SCOPES = [
 export type Session = { accessToken: string; idToken: string; expiresAt: number; via: 'sign-in' | 'refresh' };
 let session: Session | null = null;
 
-const redirectUri = () => (Platform.OS === 'web' ? `${location.origin}/spikes/auth` : `${WEB_URL}/oauth-callback.html`);
+const redirectUri = () => (Platform.OS === 'web' ? `${location.origin}/spikes/auth` : `${WEB_URL}/oauth-callback`);
 
 const authUrl = (state: string, scopes: string[]) =>
   'https://accounts.google.com/o/oauth2/v2/auth?' +
