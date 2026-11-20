@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform } from 'react-native';
 import { clearRefreshToken, getRefreshToken, setRefreshToken } from './token-store';
@@ -17,7 +18,20 @@ let session: Session | null = null;
 
 const redirectUri = () => (Platform.OS === 'web' ? `${location.origin}/spikes/auth` : `${WEB_URL}/oauth-callback`);
 
-const authUrl = (state: string, scopes: string[]) =>
+const b64url = (bytes: Uint8Array) =>
+  btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+
+/** PKCE pair (RFC 7636, S256). */
+async function pkce() {
+  const verifier = b64url(Crypto.getRandomBytes(32));
+  const hash = await Crypto.digest(Crypto.CryptoDigestAlgorithm.SHA256, new TextEncoder().encode(verifier));
+  return { verifier, challenge: b64url(new Uint8Array(hash)) };
+}
+
+const authUrl = (state: string, challenge: string, scopes: string[]) =>
   'https://accounts.google.com/o/oauth2/v2/auth?' +
   new URLSearchParams({
     client_id: CLIENT_ID,
@@ -27,6 +41,8 @@ const authUrl = (state: string, scopes: string[]) =>
     access_type: 'offline',
     prompt: 'consent',
     state,
+    code_challenge: challenge,
+    code_challenge_method: 'S256',
   });
 
 async function edge<T>(path: string, body: object): Promise<T> {
@@ -40,13 +56,18 @@ async function edge<T>(path: string, body: object): Promise<T> {
   return data as T;
 }
 
-async function exchange(code: string): Promise<Session> {
+async function exchange(code: string, codeVerifier: string): Promise<Session> {
   const t = await edge<{ accessToken: string; refreshToken?: string; expiresIn: number; idToken: string }>(
     '/oauth/exchange',
-    { code, redirectUri: redirectUri() },
+    { code, redirectUri: redirectUri(), codeVerifier },
   );
   if (t.refreshToken) await setRefreshToken(t.refreshToken);
-  session = { accessToken: t.accessToken, idToken: t.idToken, expiresAt: Date.now() + t.expiresIn * 1000, via: 'sign-in' };
+  session = {
+    accessToken: t.accessToken,
+    idToken: t.idToken,
+    expiresAt: Date.now() + t.expiresIn * 1000,
+    via: 'sign-in',
+  };
   return session;
 }
 
@@ -55,10 +76,12 @@ async function exchange(code: string): Promise<Session> {
  * extraScopes lets the calendar spike retry with calendar.events (Task 6 Step 3).
  */
 export async function signIn(extraScopes: string[] = []): Promise<Session | null> {
-  const state = Math.random().toString(36).slice(2);
-  const url = authUrl(state, [...SCOPES, ...extraScopes]);
+  const state = Crypto.randomUUID();
+  const { verifier, challenge } = await pkce();
+  const url = authUrl(state, challenge, [...SCOPES, ...extraScopes]);
   if (Platform.OS === 'web') {
     localStorage.setItem('oauthState', state);
+    localStorage.setItem('oauthVerifier', verifier);
     location.assign(url);
     return null;
   }
@@ -68,7 +91,7 @@ export async function signIn(extraScopes: string[] = []): Promise<Session | null
   if (params.get('state') !== state) throw new Error('state mismatch');
   const code = params.get('code');
   if (!code) throw new Error(params.get('error') ?? 'no code');
-  return exchange(code);
+  return exchange(code, verifier);
 }
 
 /** Web only: if the URL carries ?code from Google, exchange it and clean the URL. */
@@ -79,10 +102,12 @@ export async function completeWebSignIn(): Promise<Session | null> {
   if (!code && !params.get('error')) return null;
   history.replaceState(null, '', location.pathname);
   const expected = localStorage.getItem('oauthState');
+  const verifier = localStorage.getItem('oauthVerifier');
   localStorage.removeItem('oauthState');
-  if (!expected || params.get('state') !== expected) throw new Error('state mismatch');
+  localStorage.removeItem('oauthVerifier');
+  if (!expected || !verifier || params.get('state') !== expected) throw new Error('state mismatch');
   if (!code) throw new Error(params.get('error') ?? 'no code');
-  return exchange(code);
+  return exchange(code, verifier);
 }
 
 /** Returns a valid session, refreshing through the Worker when needed. Null when not signed in. */
@@ -90,7 +115,9 @@ export async function getSession(force = false): Promise<Session | null> {
   if (!force && session && session.expiresAt - 60_000 > Date.now()) return session;
   const refreshToken = await getRefreshToken();
   if (!refreshToken) return null;
-  const t = await edge<{ accessToken: string; expiresIn: number; idToken?: string }>('/oauth/refresh', { refreshToken });
+  const t = await edge<{ accessToken: string; expiresIn: number; idToken?: string }>('/oauth/refresh', {
+    refreshToken,
+  });
   session = {
     accessToken: t.accessToken,
     idToken: t.idToken ?? session?.idToken ?? '',

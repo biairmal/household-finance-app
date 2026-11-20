@@ -39,7 +39,7 @@ async function main() {
     const dir = join(root, c.name);
     const images = readdirSync(dir)
       .filter((f) => /\.(jpe?g|png|webp)$/i.test(f))
-      .sort();
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
     const expected: ExpectedRow[] = JSON.parse(readFileSync(join(dir, 'expected.json'), 'utf8'));
     const res = await handleExtract(
       new Request('http://local/extract', {

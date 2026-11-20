@@ -63,11 +63,16 @@ function isRow(r: unknown): r is ExtractedRow {
   );
 }
 
-/** Returns the rows if the model output is exactly the expected shape, else null. */
+/**
+ * Returns the valid rows, or null if the output isn't the expected shape. An invalid row the model flagged
+ * cutOff (e.g. amount 0 because it's clipped) is dropped; any other invalid row rejects the whole output.
+ */
 export function parseModelOutput(text: string): { rows: ExtractedRow[] } | null {
   try {
     const out = JSON.parse(text);
-    return Array.isArray(out?.rows) && out.rows.every(isRow) ? { rows: out.rows } : null;
+    if (!Array.isArray(out?.rows)) return null;
+    const rows = out.rows.filter((r: unknown) => !(r && typeof r === 'object' && (r as ExtractedRow).cutOff === true && !isRow(r)));
+    return rows.every(isRow) ? { rows } : null;
   } catch {
     return null;
   }

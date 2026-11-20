@@ -40,8 +40,15 @@ async function route(req: Request, env: Env): Promise<Response> {
 
   if (pathname === '/oauth/exchange') {
     const body = await readJson(req);
-    if (typeof body?.code !== 'string' || typeof body.redirectUri !== 'string') return json({ error: 'bad_request' }, 400);
-    const r = await googleToken(env, { grant_type: 'authorization_code', code: body.code, redirect_uri: body.redirectUri });
+    if (typeof body?.code !== 'string' || typeof body.redirectUri !== 'string' || typeof body.codeVerifier !== 'string')
+      return json({ error: 'bad_request' }, 400);
+    // PKCE: a code intercepted on its way back to the app is useless without the verifier only that device holds.
+    const r = await googleToken(env, {
+      grant_type: 'authorization_code',
+      code: body.code,
+      redirect_uri: body.redirectUri,
+      code_verifier: body.codeVerifier,
+    });
     if (!r.ok) return json({ error: r.data.error ?? 'token_exchange_failed' }, r.status === 400 ? 400 : 502);
     return json({
       accessToken: r.data.access_token,

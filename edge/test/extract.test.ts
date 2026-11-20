@@ -83,6 +83,13 @@ describe('/extract', () => {
     expect((await extract({ images: ['aGVsbG8='] })).status).toBe(502);
   });
 
+  it('drops an invalid row the model flagged cutOff, keeps the rest', async () => {
+    gemini(JSON.stringify({ rows: [row, { ...row, amount: 0, cutOff: true }] }));
+    const res = await extract({ images: ['aGVsbG8='] });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ rows: [row] });
+  });
+
   it('more than 10 images → 400', async () => {
     gemini(JSON.stringify({ rows: [] }));
     expect((await extract({ images: Array(11).fill('aGVsbG8=') })).status).toBe(400);

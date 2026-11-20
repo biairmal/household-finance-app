@@ -46,8 +46,9 @@ export default function DriveSpike() {
         color="#0A9F5A"
         onPress={run('create', async () => {
           const id = await createFolder('Household Money (spike)');
+          await createFolder('ops', id);
           saveId(id);
-          return `folder ${id}`;
+          return `folder ${id} (with ops/)`;
         })}
       />
       <TextInput style={styles.input} value={email} onChangeText={setEmail} placeholder="Member's Google email" autoCapitalize="none" keyboardType="email-address" />

@@ -1,16 +1,16 @@
 # expo-sqlite on web needs cross-origin isolation (SharedArrayBuffer). Applied to the app's pages and its
 # scripts (the sqlite worker must carry COEP too), but NOT to /picker: the Google Picker iframe may not load under COEP.
 /
-  Cross-Origin-Embedder-Policy: credentialless
+  Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Opener-Policy: same-origin
 /index.html
-  Cross-Origin-Embedder-Policy: credentialless
+  Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Opener-Policy: same-origin
 /spikes/*
-  Cross-Origin-Embedder-Policy: credentialless
+  Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Opener-Policy: same-origin
 /_expo/*
-  Cross-Origin-Embedder-Policy: credentialless
+  Cross-Origin-Embedder-Policy: require-corp
   Cross-Origin-Opener-Policy: same-origin
 /sw.js
   Cache-Control: no-cache

@@ -7,6 +7,9 @@ module.exports = {
   // picker.html is left to the network so it keeps its own headers (no cross-origin isolation; see public/_headers).
   globIgnores: ['sw.js', 'workbox-*.js', 'picker.html'],
   swDest: 'dist/sw.js',
+  // A redeploy takes over open home-screen apps on the next load, so device checks never run a stale build.
+  skipWaiting: true,
+  clientsClaim: true,
   // expo-router "single" output: every route is served by index.html
   navigateFallback: '/index.html',
   // Static pages (Cloudflare serves them without .html) that must not get the app shell.

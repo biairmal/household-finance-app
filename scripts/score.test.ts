@@ -46,4 +46,9 @@ describe('score', () => {
     expect(s.expected).toBe(0);
     expect(s.invented).toEqual([got('2026-11-01', 999, 'in')]);
   });
+
+  it('an unflagged guess at a cut-off row counts as invented', () => {
+    const s = score([{ date: '2026-11-18', amount: 5000, direction: 'out', cutOff: true }], [got('2026-11-18', 9999, 'out')]);
+    expect(s.invented).toEqual([got('2026-11-18', 9999, 'out')]);
+  });
 });

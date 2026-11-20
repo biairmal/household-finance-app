@@ -16,11 +16,13 @@ Every iPhone check runs from the home-screen icon, never from a Safari tab.
 
 ## Task 2: offline storage on the iPhone home-screen app (spec §10.2)
 
-Backend: expo-sqlite web (wa-sqlite wasm + OPFS in a worker; needs COOP/COEP headers from `public/_headers`).
+Backend: expo-sqlite web (wa-sqlite wasm + OPFS in a worker; needs COOP + `COEP: require-corp` from `public/_headers`).
+Check this row FIRST: if it says false, storage failures below are a header problem, not an iOS one.
 
 | Step | Result | Notes |
 |---|---|---|
-| Desktop Chromium: add 100, reload → count 100 | PASS | `navigator.storage.persist()` = denied there (normal for a non-installed site) |
+| iPhone home-screen app: storage screen shows `crossOriginIsolated: true` | PENDING | |
+| Desktop Chromium: add 100, reload → count 100 (`credentialless`, then again with `require-corp`) | PASS | `navigator.storage.persist()` = denied there (normal for a non-installed site) |
 | iPhone: add 1,000, force-quit, reopen offline → 1000 | PENDING | also note the `persist()` value shown on screen |
 | iPhone: reboot, reopen → 1000 | PENDING | |
 | Fallback to IndexedDB needed? | PENDING | only if a row above fails |
@@ -35,6 +37,8 @@ Backend: expo-sqlite web (wa-sqlite wasm + OPFS in a worker; needs COOP/COEP hea
 | Android: sign in, force-quit, wait > 1 h, reopen → still signed in via refresh, no consent | PENDING | screen shows "Via: refresh" |
 | iPhone home-screen app: same | PENDING | watch whether the redirect returns into the standalone app or opens Safari |
 | Refresh token survives on iPhone (IndexedDB) | PENDING | |
+
+Reading a failure after a long idle: "Signed out / not signed in" means the stored token is gone (storage evicted). "/oauth/refresh 401 invalid_grant" means Google expired it: in Testing mode refresh tokens last 7 days (spec §10.5), not an iOS problem.
 
 ## Task 4: shared household folder under `drive.file` (spec §10.1)
 

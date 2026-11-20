@@ -47,5 +47,7 @@ export function score(expected: ExpectedRow[], got: GotRow[]): Score {
     if (matches(e, g) === 3) s.correct++;
   }
   s.invented = [...unused].map((i) => got[i]).filter((g) => !g.cutOff);
+  // An unflagged, not-quite-right row paired to a cut-off row is a guess presented as fact.
+  for (const [k, g] of pairs) if (expected[k].cutOff && !g.cutOff && matches(expected[k], g) < 3) s.invented.push(g);
   return s;
 }

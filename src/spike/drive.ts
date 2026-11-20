@@ -47,9 +47,15 @@ export async function shareWith(fileId: string, email: string) {
   });
 }
 
-/** Appends the next ops/<device>/NNNN.jsonl file and returns its name. */
+/**
+ * Appends the next ops/<device>/NNNN.jsonl file and returns its name. Never creates ops/ itself: the owner does that
+ * when creating the household, and a member who can't see it is exactly what this spike is looking for.
+ */
 export async function writeNextOpsFile(householdId: string, device: string): Promise<string> {
-  const ops = await findOrCreateFolder('ops', householdId);
+  const opsFolders = (await list(householdId)).filter((f) => f.name === 'ops' && f.mimeType === FOLDER);
+  if (opsFolders.length !== 1)
+    throw new Error(`expected 1 ops/ folder visible to this account, found ${opsFolders.length}`);
+  const ops = opsFolders[0].id;
   const dir = await findOrCreateFolder(device, ops);
   const n = (await list(dir)).filter((f) => f.name.endsWith('.jsonl')).length + 1;
   const name = `${String(n).padStart(4, '0')}.jsonl`;
@@ -59,13 +65,20 @@ export async function writeNextOpsFile(householdId: string, device: string): Pro
 
 /** Lists and reads every ops/<device>/*.jsonl; each line is "path: content" or "path: ERROR …". */
 export async function readAllOps(householdId: string): Promise<string[]> {
-  const ops = (await list(householdId)).find((f) => f.name === 'ops' && f.mimeType === FOLDER);
-  if (!ops) return ['no ops/ folder visible'];
+  const opsFolders = (await list(householdId)).filter((f) => f.name === 'ops' && f.mimeType === FOLDER);
+  if (!opsFolders.length) return ['no ops/ folder visible'];
   const out: string[] = [];
-  for (const dir of await list(ops.id)) {
-    for (const f of await list(dir.id)) {
-      const path = `ops/${dir.name}/${f.name}`;
-      out.push(await read(f.id).then((c) => `${path}: ${c.trim()}`, (e) => `${path}: ERROR ${e}`));
+  for (const ops of opsFolders) {
+    for (const dir of await list(ops.id)) {
+      for (const f of await list(dir.id)) {
+        const path = `ops(${ops.id.slice(0, 6)})/${dir.name}/${f.name}`;
+        out.push(
+          await read(f.id).then(
+            (c) => `${path}: ${c.trim()}`,
+            (e) => `${path}: ERROR ${e}`,
+          ),
+        );
+      }
     }
   }
   return out;

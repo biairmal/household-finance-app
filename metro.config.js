@@ -7,7 +7,7 @@ const config = getDefaultConfig(__dirname);
 // expo-sqlite on web loads a wasm file and needs SharedArrayBuffer (cross-origin isolation).
 config.resolver.assetExts.push('wasm');
 config.server.enhanceMiddleware = (middleware) => (req, res, next) => {
-  res.setHeader('Cross-Origin-Embedder-Policy', 'credentialless');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'require-corp');
   res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
   middleware(req, res, next);
 };
