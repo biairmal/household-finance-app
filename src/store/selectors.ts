@@ -235,6 +235,16 @@ export const plansView = memo((s, today: string) => {
   };
 });
 
+/** What the category's budget looks like after this expense (the edited transaction's old amount left out). */
+export const budgetImpact = memo((s, categoryId: string, amount: number, date: string, excludeId?: string) => {
+  const budget = budgets(s).find((b) => b.categoryId === categoryId);
+  const category = categoryOf(s, categoryId);
+  if (!budget || !category) return null;
+  const probe: Transaction = { id: '__probe', type: 'expense', amount, date, accountId: '', categoryId, source: 'manual', authorId: '' };
+  const u = budgetUsage(budget, [...transactions(s).filter((t) => t.id !== excludeId), probe], monthOf(date));
+  return { name: category.name, spentAfter: u.spent, limit: u.limit, ratioAfter: u.ratio, status: u.status };
+});
+
 /** The single Home tip: overdue bill → over-budget category → set-aside not done → all on track. */
 export const homeTip = memo((s, today: string) => {
   const v = plansView(s, today);

@@ -8,6 +8,9 @@ import { Tint, colors, font, radius, tabular } from './theme';
 
 type Weight = keyof typeof font;
 
+/** Back, or Home when the page was opened directly (a reload or a deep link has no history). */
+export const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
 export function Txt({ w = 'regular', size = 14, color = colors.ink, style, ...rest }: TextProps & { w?: Weight; size?: number; color?: string }) {
   return <Text {...rest} style={[{ fontFamily: font[w], fontSize: size, color }, tabular, style]} />;
 }
@@ -27,7 +30,7 @@ export function PageHeader({ title, right }: { title: string; right?: ReactNode 
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.pageHeader, { paddingTop: insets.top + 4 }]}>
-      <IconButton label="Back" onPress={() => (router.canGoBack() ? router.back() : router.replace('/'))}>
+      <IconButton label="Back" onPress={goBack}>
         <ChevronLeft />
       </IconButton>
       <Txt w="extrabold" size={17} style={{ flex: 1 }} numberOfLines={1}>

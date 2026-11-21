@@ -3,7 +3,7 @@ import { Op, State, applyOps } from '../../domain/sync/ops';
 import { Category } from '../../domain/types';
 import { sampleOps } from '../sample';
 import {
-  accountRows, budgetHint, categories, categorySpend, dayGroups, homeSummary, homeTip, plansView, recentlyDeleted, suggestedCategoryId, transactions,
+  accountRows, budgetHint, categories, categorySpend, dayGroups, budgetImpact, homeSummary, homeTip, plansView, recentlyDeleted, suggestedCategoryId, transactions,
 } from '../selectors';
 
 const NOW = Date.UTC(2026, 10, 20, 3, 0);
@@ -84,4 +84,13 @@ test('home tip: overdue PLN first, then the over-budget category once PLN is pai
 test('lists are cached per table', () => {
   expect(transactions(state)).toBe(transactions(state));
   expect(transactions({ ...state, account: {} })).toBe(transactions(state));
+});
+
+test('budget impact of a new groceries expense', () => {
+  const g = cat(state, 'Food & groceries').id;
+  expect(budgetImpact(state, g, 86500, '2026-11-20')).toEqual({ name: 'Food & groceries', spentAfter: 2186500, limit: 3000000, ratioAfter: 2186500 / 3000000, status: 'ok' });
+  expect(budgetImpact(state, g, 1000000, '2026-11-20')?.status).toBe('over');
+  expect(budgetImpact(state, cat(state, 'Salary').id, 1, '2026-11-20')).toBeNull();
+  const indomaret = transactions(state).find((t) => t.counterpartyName === 'Indomaret Kemang')!;
+  expect(budgetImpact(state, g, 90000, '2026-11-18', indomaret.id)?.spentAfter).toBe(2103500);
 });
