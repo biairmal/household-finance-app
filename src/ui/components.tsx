@@ -111,6 +111,8 @@ export const monthName = (key: string, short = false) => {
   const name = MONTHS[Number(key.slice(5, 7)) - 1];
   return `${short ? name.slice(0, 3) : name} ${key.slice(0, 4)}`;
 };
+/** "1 Dec" from a YYYY-MM-DD date. */
+export const shortDate = (date: string) => `${Number(date.slice(8))} ${MONTHS[Number(date.slice(5, 7)) - 1].slice(0, 3)}`;
 
 export function MonthStepper({ label, onPrev, onNext, variant = 'soft' }: { label: string; onPrev: () => void; onNext: () => void; variant?: 'soft' | 'plain' }) {
   const btn = variant === 'soft' ? styles.stepSoft : undefined;

@@ -1,17 +1,14 @@
 import { useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { View } from 'react-native';
 import { Category } from '@/domain/types';
 import { budgets, categories, transactions } from '@/store/selectors';
-import { Button, Card, Field, IconCircle, PageHeader, Row, Screen, Txt } from '@/ui/components';
+import { Button, Card, Field, IconCircle, PageHeader, Row, Screen } from '@/ui/components';
 import { confirm } from '@/ui/confirm';
+import { EmojiPicker } from '@/ui/EmojiPicker';
 import { Segmented } from '@/ui/Segmented';
 import { useAppState, useStore } from '@/ui/StoreProvider';
-import { colors, radius } from '@/ui/theme';
+import { colors } from '@/ui/theme';
 
-const EMOJI = [
-  '🛒', '🍜', '☕', '⛽', '🚗', '🛵', '🏠', '💡', '💧', '📱', '💊', '🏥', '🎓', '📚', '🛍️', '👕', '👪', '👶', '🤲', '🎬',
-  '🎮', '📺', '🎵', '✈️', '🏖️', '🎁', '🐶', '💇', '🧾', '🏦', '💳', '📦', '🔧', '🧹', '⚽', '💼', '💰', '🧑‍💻', '📈', '➕',
-];
 const OTHER: Record<Category['kind'], string> = { expense: 'Other', income: 'Other income' };
 
 export default function Categories() {
@@ -84,14 +81,7 @@ function Editor({ initial, onDone, onDelete }: { initial: Partial<Category> & Pi
   return (
     <View style={{ paddingVertical: 12, gap: 10, borderBottomWidth: 1, borderBottomColor: colors.hairline }}>
       <Field label="Name" value={name} onChangeText={setName} autoFocus maxLength={30} />
-      <Txt size={12} w="bold" color={colors.muted}>Icon</Txt>
-      <View style={styles.grid} accessibilityRole="radiogroup" accessibilityLabel="Icon">
-        {EMOJI.map((e) => (
-          <Pressable key={e} onPress={() => setEmoji(e)} accessibilityRole="radio" accessibilityState={{ checked: e === emoji }} accessibilityLabel={e} style={[styles.emoji, e === emoji && styles.on]}>
-            <Text style={{ fontSize: 22 }}>{e}</Text>
-          </Pressable>
-        ))}
-      </View>
+      <EmojiPicker value={emoji} onChange={setEmoji} />
       <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
         <Button title="Save" small onPress={save} disabled={!name.trim()} />
         <Button title="Cancel" small kind="secondary" onPress={onDone} />
@@ -101,8 +91,3 @@ function Editor({ initial, onDone, onDelete }: { initial: Partial<Category> & Pi
   );
 }
 
-const styles = StyleSheet.create({
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 4 },
-  emoji: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center', borderRadius: radius.chip },
-  on: { backgroundColor: colors.successSurface, borderWidth: 2, borderColor: colors.accent },
-});
