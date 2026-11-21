@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 import { compareHlc, receive, tick } from '../sync/hlc';
-import { Op, applyOps } from '../sync/ops';
+import { Op, applyOps, emptyFolded, foldOps } from '../sync/ops';
 
 const T0 = Date.UTC(2026, 10, 20, 3, 0, 0);
 const hlc = (ms: number, counter: number, dev: string) => `${String(ms).padStart(15, '0')}:${String(counter).padStart(5, '0')}:${dev}`;
@@ -36,7 +36,7 @@ const del = (id: string, h: string, authorId = 'a'): Op =>
 describe('applyOps', () => {
   test('create then set updates the field', () => {
     const { state } = applyOps([create('o1', hlc(T0, 0, 'A'), { amount: 15000 }), set('o2', hlc(T0 + 1, 0, 'A'), 'amount', 16000)]);
-    expect(state.transaction.t1).toEqual({ id: 't1', amount: 16000 });
+    expect(state.transaction.t1).toEqual({ id: 't1', amount: 16000, updatedBy: 'a', updatedAt: new Date(T0 + 1).toISOString() });
   });
 
   test('concurrent sets: higher HLC wins and the loss is recorded', () => {
@@ -91,5 +91,21 @@ describe('applyOps', () => {
       }
       expect(applyOps(shuffled)).toEqual(expected);
     }
+    const sorted = [...ops].sort((a, b) => (a.hlc < b.hlc ? -1 : a.hlc > b.hlc ? 1 : a.id < b.id ? -1 : 1));
+    const acc = foldOps(foldOps(emptyFolded(), sorted.slice(0, 13)), sorted.slice(13));
+    expect({ state: acc.state, conflicts: acc.conflicts }).toEqual(expected);
+    expect(acc.lastHlc).toBe(sorted[sorted.length - 1].hlc);
+  });
+
+  test('a set by author b leaves updatedBy b', () => {
+    const { state } = applyOps([create('o1', hlc(T0, 0, 'A'), {}), set('o2', hlc(T0 + 1, 0, 'B'), 'note', 'x', 'b')]);
+    expect(state.transaction.t1.updatedBy).toBe('b');
+  });
+
+  test('member is an entity', () => {
+    const { state } = applyOps([
+      { id: 'm', hlc: hlc(T0, 0, 'A'), authorId: 'm1', entity: 'member', entityId: 'm1', kind: 'create', data: { name: 'Bia', initial: 'B' } },
+    ]);
+    expect(state.member.m1).toMatchObject({ name: 'Bia', initial: 'B' });
   });
 });

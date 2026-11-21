@@ -38,3 +38,16 @@ export function addMonthsClamped(date: string, n: number): string {
 export const monthsRemaining = (today: string, due: string): number => Math.max(1, monthIndex(due) - monthIndex(today));
 
 export const roundUp1000 = (n: number): number => Math.ceil(n / 1000) * 1000;
+
+const JAKARTA_OFFSET_MS = 7 * 3600000; // UTC+7, no DST
+
+export const todayJakarta = (nowMs: number = Date.now()): string => new Date(nowMs + JAKARTA_OFFSET_MS).toISOString().slice(0, 10);
+
+export const monthOf = (date: string): string => date.slice(0, 7);
+
+export const addMonthsToKey = (key: string, n: number): string => monthKey(monthIndex(`${key}-01`) + n);
+
+export const daysInMonthKey = (key: string): number => {
+  const [y, m] = parse(`${key}-01`);
+  return daysInMonth(y, m);
+};
