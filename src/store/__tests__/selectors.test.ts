@@ -3,7 +3,7 @@ import { Op, State, applyOps } from '../../domain/sync/ops';
 import { Category } from '../../domain/types';
 import { sampleOps } from '../sample';
 import {
-  accountRows, budgetHint, categories, categorySpend, dayGroups, homeSummary, plansView, recentlyDeleted, suggestedCategoryId, transactions,
+  accountRows, budgetHint, categories, categorySpend, dayGroups, homeSummary, homeTip, plansView, recentlyDeleted, suggestedCategoryId, transactions,
 } from '../selectors';
 
 const NOW = Date.UTC(2026, 10, 20, 3, 0);
@@ -72,6 +72,13 @@ test('suggested category comes from the Indomaret rule', () => {
   expect(suggestedCategoryId(state, 'indomaret', '2026-11')).toBe(cat(state, 'Food & groceries').id);
   expect(suggestedCategoryId(state, 'Sate Khas Senayan', '2026-11')).toBe(cat(state, 'Eating out').id);
   expect(suggestedCategoryId(state, 'something new', '2026-11')).toBe(cat(state, 'Food & groceries').id);
+});
+
+test('home tip: overdue PLN first, then the over-budget category once PLN is paid', () => {
+  expect(homeTip(state, TODAY)).toMatchObject({ kind: 'overdue', bill: { name: 'PLN electricity' }, days: 2 });
+  const pln = plansView(state, TODAY).bills.find((b) => b.bill.name === 'PLN electricity')!.bill;
+  const paid: Op = { id: 'pay', hlc: `${String(NOW + 1000).padStart(15, '0')}:00000:x`, authorId: 'me', entity: 'bill', entityId: pln.id, kind: 'set', field: 'dueDate', value: '2026-12-18' };
+  expect(homeTip(applyOps([...ops, paid]).state, TODAY)).toMatchObject({ kind: 'over', category: { name: 'Eating out' }, overBy: 150000 });
 });
 
 test('lists are cached per table', () => {

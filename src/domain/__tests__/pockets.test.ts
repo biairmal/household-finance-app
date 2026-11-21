@@ -43,3 +43,8 @@ test('deleted allocation ignored', () => {
   const d = [...allocs, a('y', 'bali', 100, { deletedAt: '2026-11-20' })];
   expect(accountSplit(savings, pockets, d, []).free).toBe(12800000);
 });
+
+test('a credit card owing money with no pockets is not over-allocated', () => {
+  const card: Account = { id: 'cc', name: 'Card', type: 'credit', currency: 'IDR', openingBalance: -2340000 };
+  expect(accountSplit(card, pockets, allocs, [])).toEqual({ pockets: [], free: 0, overAllocatedBy: 0 });
+});

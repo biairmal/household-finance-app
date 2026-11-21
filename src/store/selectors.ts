@@ -235,6 +235,20 @@ export const plansView = memo((s, today: string) => {
   };
 });
 
+/** The single Home tip: overdue bill → over-budget category → set-aside not done → all on track. */
+export const homeTip = memo((s, today: string) => {
+  const v = plansView(s, today);
+  const overdue = v.bills.find((b) => b.month.plan.overdue);
+  if (overdue) return { kind: 'overdue' as const, bill: overdue.bill, days: overdue.month.plan.daysOverdue };
+  const hint = budgetHint(s, monthOf(today));
+  if (hint) return { kind: 'over' as const, category: hint.category, overBy: hint.overBy };
+  const bill = v.bills.find((b) => !b.month.done && b.month.plan.monthly > 0);
+  if (bill) return { kind: 'setAside' as const, name: bill.bill.name, amount: bill.month.plan.monthly };
+  const goal = v.goals.find((g) => !g.month.done && (g.month.plan.required ?? 0) > 0);
+  if (goal) return { kind: 'setAside' as const, name: goal.goal.name, amount: goal.month.plan.required ?? 0 };
+  return { kind: 'ok' as const };
+});
+
 /** Deleted transactions still restorable (deleted within the last 30 days), newest deletion first. */
 export const recentlyDeleted = memo((s, today: string) =>
   allTransactions(s)
