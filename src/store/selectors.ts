@@ -7,7 +7,7 @@ import { formatAmount } from '../domain/money';
 import { PlanCtx, billMonth, goalMonth, plansSummary } from '../domain/plans';
 import { accountSplit } from '../domain/pockets';
 import { applyRules } from '../domain/rules';
-import { categoryAverages } from '../domain/stats';
+import { budgetAdvice, categoryAverages, categoryTrend, incomeVsExpense, topCounterparties } from '../domain/stats';
 import { EntityName, State } from '../domain/sync/ops';
 import { Account, AccountType, Allocation, Bill, Budget, Category, Goal, Member, Pocket, Rule, Transaction, live } from '../domain/types';
 
@@ -202,8 +202,10 @@ export function spendFrom(s: State, txs: Transaction[], period: 'month' | 'year'
     .sort((a, b) => b.amount - a.amount);
 }
 
-export const budgetHint = memo((s, monthKey: string) => {
-  const txs = transactions(s);
+export const budgetHint = memo((s, monthKey: string) => budgetHintFrom(s, transactions(s), monthKey));
+
+/** The monthly budget furthest over in `monthKey`, computed from `txs` (Stats passes filtered ones). */
+export function budgetHintFrom(s: State, txs: Transaction[], monthKey: string) {
   let best: { category: Category; overBy: number; avg3: number; budget: Budget } | null = null;
   for (const b of budgets(s)) {
     if (b.period !== 'monthly') continue;
@@ -214,6 +216,38 @@ export const budgetHint = memo((s, monthKey: string) => {
     if (!best || overBy > best.overBy) best = { category, overBy, avg3: categoryAverages(txs, b.categoryId, monthKey).avg3, budget: b };
   }
   return best;
+}
+
+/** Everything the Stats tab shows, from transactions filtered by member and account first. */
+export const statsView = memo((s, period: 'month' | 'year', key: string, kind: 'expense' | 'income', memberId: string, accountId: string) => {
+  const txs = transactions(s).filter((t) => (!memberId || t.authorId === memberId) && (!accountId || t.accountId === accountId || t.toAccountId === accountId));
+  const rows = spendFrom(s, txs, period, key, kind);
+  const endMonth = period === 'month' ? key : `${key}-12`;
+  let limit = 0;
+  let spent = 0;
+  for (const b of budgets(s)) {
+    if (period === 'month' && b.period !== 'monthly') continue;
+    const asked = period === 'year' && b.period === 'monthly' ? { ...b, period: 'yearly' as const, amount: b.amount * 12 } : b;
+    const u = budgetUsage(asked, txs, endMonth);
+    limit += u.limit;
+    spent += u.spent;
+  }
+  const tuning = budgets(s)
+    .filter((b) => b.period === 'monthly' && categoryOf(s, b.categoryId) && !categoryOf(s, b.categoryId)!.deletedAt)
+    .map((b) => {
+      const avg = categoryAverages(txs, b.categoryId, endMonth);
+      return { budget: b, category: categoryOf(s, b.categoryId)!, ...avg, advice: budgetAdvice(avg.avg3, b.amount) };
+    });
+  return {
+    rows,
+    total: rows.reduce((t, r) => t + r.amount, 0),
+    budget: { limit, spent, left: limit - spent, ratio: limit > 0 ? spent / limit : 0 },
+    hint: period === 'month' && kind === 'expense' ? budgetHintFrom(s, txs, key) : null,
+    flow: incomeVsExpense(txs, endMonth),
+    top: topCounterparties(txs, key),
+    tuning,
+    trend: (categoryId: string) => categoryTrend(txs, categoryId, endMonth),
+  };
 });
 
 /** Σ monthly budgets + Σ yearly budgets / 12. */
