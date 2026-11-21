@@ -39,6 +39,8 @@ function memo<A extends unknown[], R>(fn: (s: State, ...args: A) => R) {
 }
 
 export const accounts = list<Account>('account');
+export const allAccounts = list<Account>('account', true);
+export const allPockets = list<Pocket>('pocket', true);
 export const transactions = list<Transaction>('transaction');
 export const allTransactions = list<Transaction>('transaction', true);
 export const categories = list<Category>('category');
