@@ -18,7 +18,7 @@ export default function Onboarding() {
   const [error, setError] = useState<string | null>(null);
   if (onboarded) return <Redirect href="/" />;
 
-  const start = async (seed: () => Promise<void>, then: '/settings' | '/') => {
+  const start = async (seed: () => Promise<void>, then: '/settings/accounts' | '/') => {
     setBusy(true);
     setError(null);
     try {
@@ -32,7 +32,7 @@ export default function Onboarding() {
     }
   };
   const startEmpty = () =>
-    start(() => store.batch((tx) => defaultCategories().forEach((c) => tx.create('category', c))), '/settings');
+    start(() => store.batch((tx) => defaultCategories().forEach((c) => tx.create('category', c))), '/settings/accounts');
   const loadSample = () => start(() => store.batch((tx) => seedSample(tx, store.memberId!)), '/');
 
   const ready =name.trim().length > 0 && !busy;

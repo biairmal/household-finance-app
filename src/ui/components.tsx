@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleProp, StyleSheet, Text, TextProps, TextStyle, View, ViewStyle } from 'react-native';
+import { Pressable, ScrollView, StyleProp, StyleSheet, Text, TextInput, TextInputProps, TextProps, TextStyle, View, ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { formatAmount, formatIDR } from '../domain/money';
 import { ChevronLeft, ChevronRight } from './icons';
@@ -162,6 +162,24 @@ export function Pill({ text, color, bg }: { text: string; color: string; bg: str
   );
 }
 
+/** A labelled text input for forms. */
+export function Field({ label, error, hint, style, ...rest }: TextInputProps & { label: string; error?: boolean; hint?: ReactNode }) {
+  return (
+    <View style={{ gap: 6 }}>
+      <Txt size={12} w="bold" color={colors.muted}>{label}</Txt>
+      <TextInput accessibilityLabel={label} placeholderTextColor={colors.muted} {...rest} style={[styles.input, error && styles.bad, style]} />
+      {hint}
+    </View>
+  );
+}
+
+/** A rupiah amount typed as digits and shown grouped (20.000.000). */
+export function AmountField({ value, onAmount, ...rest }: Omit<TextInputProps, 'value'> & { label: string; value: number; onAmount: (n: number) => void; error?: boolean; hint?: ReactNode }) {
+  return (
+    <Field {...rest} keyboardType="number-pad" value={value ? formatAmount(value) : ''} onChangeText={(t) => onAmount(Number(t.replace(/\D/g, '').slice(0, 15)) || 0)} placeholder="0" />
+  );
+}
+
 export const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   pageHeader: { flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 8, paddingBottom: 6, backgroundColor: colors.card, borderBottomWidth: 1, borderBottomColor: colors.border },
@@ -177,4 +195,6 @@ export const styles = StyleSheet.create({
   button: { height: 48, borderRadius: radius.control, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16 },
   buttonSmall: { height: 36, borderRadius: radius.chip, paddingHorizontal: 12 },
   section: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginHorizontal: 16, marginTop: 18 },
+  input: { height: 48, borderRadius: radius.control, backgroundColor: colors.card, paddingHorizontal: 14, fontFamily: font.semibold, fontSize: 15, color: colors.ink, borderWidth: 1, borderColor: colors.border },
+  bad: { borderColor: colors.red, color: colors.red },
 });

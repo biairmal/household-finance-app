@@ -10,6 +10,7 @@ export default function Settings() {
       <PageHeader title="Settings" />
       <Screen style={{ padding: 16 }}>
         <Card>
+          <Row left={<IconCircle emoji="🏦" tint="blue" size={36} />} title="Accounts" onPress={() => router.push('/settings/accounts')} right={<ChevronRight color={colors.muted} size={18} />} />
           <Row left={<IconCircle emoji="🛠️" tint="blue" size={36} />} title="Developer" last onPress={() => router.push('/settings/developer')} right={<ChevronRight color={colors.muted} size={18} />} />
         </Card>
       </Screen>
