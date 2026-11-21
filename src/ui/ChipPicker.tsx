@@ -13,6 +13,7 @@ export function ChipPicker({ chips, value, onChange, label, wrap }: { chips: Chi
         key={c.id}
         onPress={() => onChange(c.id)}
         accessibilityRole="radio"
+        hitSlop={2}
         accessibilityState={{ checked: on }}
         accessibilityLabel={c.label}
         style={[styles.chip, on && styles.on]}

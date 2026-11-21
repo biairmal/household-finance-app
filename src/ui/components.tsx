@@ -137,8 +137,10 @@ export function Button({ title, onPress, kind = 'primary', disabled, style, smal
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={title}
       accessibilityState={{ disabled: !!disabled }}
       disabled={disabled}
+      hitSlop={small ? 4 : undefined}
       onPress={onPress}
       style={({ pressed }) => [styles.button, small && styles.buttonSmall, { backgroundColor: bg }, disabled && styles.disabled, pressed && styles.pressed, style]}
     >

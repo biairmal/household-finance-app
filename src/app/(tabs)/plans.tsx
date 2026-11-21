@@ -38,7 +38,7 @@ export default function Plans() {
             <Button title="Cancel" small kind="secondary" onPress={() => setChoosing(false)} />
           </View>
         ) : (
-          <Pressable accessibilityRole="button" accessibilityLabel="New bill or goal" onPress={() => setChoosing(true)} style={({ pressed }) => [styles.newBtn, pressed && { opacity: 0.8 }]}>
+          <Pressable accessibilityRole="button" accessibilityLabel="New bill or goal" hitSlop={4} onPress={() => setChoosing(true)} style={({ pressed }) => [styles.newBtn, pressed && { opacity: 0.8 }]}>
             <PlusIcon size={16} color={colors.white} />
             <Txt w="bold" size={13} color={colors.white}>New</Txt>
           </Pressable>
