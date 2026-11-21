@@ -64,6 +64,8 @@ export async function createStore(db: OpsDb, opts: { now?: () => number; newId?:
 
   async function commit(drafts: Draft[], authorOverride?: string): Promise<void> {
     if (drafts.length === 0) return;
+    // undefined fields would vanish in SQLite's JSON anyway; drop them so memory and disk agree.
+    for (const d of drafts) if (d.kind === 'create') d.data = Object.fromEntries(Object.entries(d.data).filter(([, v]) => v !== undefined));
     let hlc = lastHlc;
     const ops: Op[] = drafts.map((d) => {
       hlc = tick(hlc, now(), deviceId!);

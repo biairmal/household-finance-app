@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { defaultCategories } from '@/domain/defaults';
+import { seedSample } from '@/store/sample';
 import { Button, Txt } from '@/ui/components';
 import { Kasi } from '@/ui/kasi';
 import { useOnboarding, useStore } from '@/ui/StoreProvider';
@@ -32,8 +33,9 @@ export default function Onboarding() {
   };
   const startEmpty = () =>
     start(() => store.batch((tx) => defaultCategories().forEach((c) => tx.create('category', c))), '/settings');
+  const loadSample = () => start(() => store.batch((tx) => seedSample(tx, store.memberId!)), '/');
 
-  const ready = name.trim().length > 0 && !busy;
+  const ready =name.trim().length > 0 && !busy;
   return (
     <View style={[styles.root, { paddingTop: insets.top + 48, paddingBottom: insets.bottom + 24 }]}>
       <Kasi mood="happy" size={88} />
@@ -52,6 +54,7 @@ export default function Onboarding() {
       <View style={{ flex: 1 }} />
       {error && <Txt color={colors.red}>{error}</Txt>}
       <Button title="Start empty" onPress={startEmpty} disabled={!ready} />
+      <Button title="Load sample November" kind="secondary" onPress={loadSample} disabled={!ready} />
     </View>
   );
 }

@@ -97,6 +97,7 @@ export type Funding = { kind: 'pocket'; pocketId: string } | { kind: 'account'; 
 export interface Bill {
   id: string;
   name: string;
+  emoji?: string;
   amount: number;
   dueDate: string;
   recurrence: Recurrence;
@@ -115,6 +116,7 @@ export interface Bill {
 export interface Goal {
   id: string;
   name: string;
+  emoji?: string;
   target: number;
   targetDate?: string;
   funding: Funding;
