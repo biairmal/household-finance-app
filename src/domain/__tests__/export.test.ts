@@ -8,6 +8,7 @@ const ops: Op[] = [
   { id: '2', hlc: h(2), authorId: 'a', entity: 'transaction', entityId: 't2', kind: 'create', data: { amount: 1 } },
   { id: '3', hlc: h(3), authorId: 'a', entity: 'transaction', entityId: 't2', kind: 'delete' },
   { id: '4', hlc: h(4), authorId: 'a', entity: 'account', entityId: 'bca', kind: 'create', data: { name: 'BCA', currency: 'IDR', openingBalance: 0 } },
+  { id: '6', hlc: h(6), authorId: 'a', entity: 'member', entityId: 'a', kind: 'create', data: { name: 'Bia', initial: 'B' } },
   { id: '5', hlc: h(5), authorId: 'b', entity: 'transaction', entityId: 't1', kind: 'set', field: 'categoryId', value: 'food' },
 ];
 const meta = { householdId: 'hh1', exportedAt: '2026-11-21T00:00:00.000Z' };
@@ -32,6 +33,7 @@ test('backup round trip', () => {
   const parsed = parseBackup(serializeBackup(ops, meta));
   expect(parsed.meta).toEqual(meta);
   expect(applyOps(parsed.ops)).toEqual(applyOps(ops));
+  expect(applyOps(parsed.ops).state.member.a).toMatchObject({ name: 'Bia' });
 });
 
 test('rejects other versions and malformed files', () => {

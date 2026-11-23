@@ -35,7 +35,7 @@ test('vehicle tax plan (spec example)', () => {
 
 test('behind schedule raises the monthly amount and reports the gap', () => {
   const p = billPlan({ ...vehicle, amount: 3600000, dueDate: '2027-05-15', createdAt: '2026-08-10' }, 800000, '2026-11-20');
-  expect(p.behindBy).toBe(800000); // base 400.000 × 4 months (Aug–Nov) − 800.000
+  expect(p.behindBy).toBe(400000); // base 400.000 × 3 completed months (Aug–Oct) − 800.000
   expect(p.monthly).toBe(467000); // roundUp1000(2.800.000 / 6)
 });
 
@@ -49,8 +49,21 @@ test('overdue PLN', () => {
   expect(p).toMatchObject({ overdue: true, daysOverdue: 2, monthly: 650000, daysUntilDue: 0, behindBy: 650000 });
 });
 
-test('past due but fully funded is not overdue', () => {
-  expect(billPlan({ ...pln, amount: 650000, dueDate: '2026-11-18' }, 650000, '2026-11-20').overdue).toBe(false);
+test('past due and unpaid is overdue even when fully funded', () => {
+  expect(billPlan({ ...pln, amount: 650000, dueDate: '2026-11-18' }, 650000, '2026-11-20')).toMatchObject({ overdue: true, daysOverdue: 2, monthly: 0 });
+});
+
+test('a paid one-off bill is not overdue', () => {
+  expect(billPlan({ ...pln, recurrence: { kind: 'once' }, dueDate: '2026-11-18', paidAt: '2026-11-18' }, 0, '2026-11-20').overdue).toBe(false);
+});
+
+test('a bill is never behind in its creation month', () => {
+  expect(billPlan({ ...vehicle, amount: 3600000, dueDate: '2027-05-15', createdAt: '2026-11-02' }, 0, '2026-11-20').behindBy).toBe(0);
+});
+
+test('a monthly bill created long ago is not behind: the pace starts at the current cycle', () => {
+  const rent = { ...b, amount: 4000000, dueDate: '2026-12-01', createdAt: '2026-03-01' };
+  expect(billPlan(rent, 0, '2026-11-20')).toMatchObject({ behindBy: 0, monthly: 4000000 });
 });
 
 test('next due dates', () => {

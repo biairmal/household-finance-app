@@ -18,5 +18,6 @@ export function accountSplit(
     .map((p) => ({ id: p.id, balance: pocketBalance(p.id, allocations, txs) }));
   const inPockets = split.reduce((s, p) => s + p.balance, 0);
   const balance = accountBalance(account, txs);
-  return { pockets: split, free: Math.max(0, balance - inPockets), overAllocatedBy: Math.max(0, inPockets - balance) };
+  // A negative balance (a card owing money) has nothing to allocate, so only pocketed money can be over-allocated.
+  return { pockets: split, free: Math.max(0, balance - inPockets), overAllocatedBy: Math.max(0, inPockets - Math.max(0, balance)) };
 }

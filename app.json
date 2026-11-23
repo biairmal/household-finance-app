@@ -33,11 +33,18 @@
         }
       ],
       "expo-sqlite",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-sharing"
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "e90b86b3-e3b7-4964-a1af-a061b544903a"
+      }
+    },
+    "owner": "biairmal"
   }
 }

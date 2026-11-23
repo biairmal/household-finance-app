@@ -1,3 +1,12 @@
+export interface Member {
+  id: string;
+  name: string;
+  initial: string;
+  deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
+}
+
 export type AccountType = 'bank' | 'savings' | 'credit' | 'ewallet' | 'cash';
 
 export interface Account {
@@ -10,6 +19,8 @@ export interface Account {
   openingBalance: number;
   ownerMemberId?: string;
   deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export type TxType = 'income' | 'expense' | 'transfer';
@@ -34,6 +45,8 @@ export interface Transaction {
   source: 'manual' | 'screenshot';
   authorId: string;
   deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface Category {
@@ -42,6 +55,8 @@ export interface Category {
   emoji: string;
   kind: 'expense' | 'income';
   deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface Pocket {
@@ -49,6 +64,8 @@ export interface Pocket {
   accountId: string;
   name: string;
   deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface Allocation {
@@ -59,6 +76,8 @@ export interface Allocation {
   date: string;
   authorId: string;
   deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface Budget {
@@ -67,6 +86,8 @@ export interface Budget {
   period: 'monthly' | 'yearly';
   amount: number;
   deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export type Recurrence = { kind: 'once' } | { kind: 'monthly' } | { kind: 'yearly' } | { kind: 'everyNMonths'; n: number };
@@ -76,22 +97,32 @@ export type Funding = { kind: 'pocket'; pocketId: string } | { kind: 'account'; 
 export interface Bill {
   id: string;
   name: string;
+  emoji?: string;
   amount: number;
   dueDate: string;
   recurrence: Recurrence;
   funding: Funding;
   reminderOffsetsDays: number[];
   createdAt: string;
+  /** Category the payment is booked to. */
+  categoryId?: string;
+  /** When a one-off bill was paid. */
+  paidAt?: string;
   deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface Goal {
   id: string;
   name: string;
+  emoji?: string;
   target: number;
   targetDate?: string;
   funding: Funding;
   deletedAt?: string;
+  updatedBy?: string;
+  updatedAt?: string;
 }
 
 export interface Rule {
@@ -100,6 +131,7 @@ export interface Rule {
   action: { kind: 'category'; categoryId: string } | { kind: 'transfer'; toAccountId: string } | { kind: 'pocket'; pocketId: string };
   updatedAt: string;
   deletedAt?: string;
+  updatedBy?: string;
 }
 
 export interface RowFacts {
