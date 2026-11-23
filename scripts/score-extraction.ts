@@ -1,6 +1,6 @@
 // Usage: npx tsx scripts/score-extraction.ts spikes/screenshots
 // Runs the Worker's own /extract code (same prompt, schema and validation) on each case folder and scores it.
-// Needs GEMINI_API_KEY (env or edge/.dev.vars). GEMINI_MODEL defaults to the pinned value in edge/wrangler.toml.
+// Needs GEMINI_API_KEY (env or edge/.dev.vars). GEMINI_MODEL defaults to the pinned value in edge/wrangler.jsonc.
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import sharp from 'sharp';
@@ -12,9 +12,9 @@ const root = process.argv[2];
 if (!root) throw new Error('usage: score-extraction.ts <screenshots dir>');
 if (existsSync('edge/.dev.vars')) process.loadEnvFile('edge/.dev.vars');
 const model =
-  process.env.GEMINI_MODEL ?? readFileSync('edge/wrangler.toml', 'utf8').match(/GEMINI_MODEL\s*=\s*"([^"]+)"/)?.[1];
+  process.env.GEMINI_MODEL ?? readFileSync('edge/wrangler.jsonc', 'utf8').match(/"GEMINI_MODEL": "([^"]+)"/)?.[1];
 if (!process.env.GEMINI_API_KEY || !model)
-  throw new Error('set GEMINI_API_KEY (and GEMINI_MODEL if not in wrangler.toml)');
+  throw new Error('set GEMINI_API_KEY (and GEMINI_MODEL if not in edge/wrangler.jsonc)');
 const env = { GEMINI_API_KEY: process.env.GEMINI_API_KEY, GEMINI_MODEL: model } as Env;
 
 // Same treatment the phone will apply before upload: JPEG, long edge ≤ 1600px.

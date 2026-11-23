@@ -13,7 +13,8 @@ Rules:
 - counterpartyName / counterpartyAccount / reference / runningBalance: only if shown, else null. Don't guess.
 - cutOff: true if any part of the row is clipped at the top or bottom edge of the image, so a field may be missing or wrong.
 - Several images may overlap (scrolled). List each real transaction once.
-- Never invent rows. Skip headers, ads, balances and promotions that are not transactions.`;
+- Never invent rows. Skip headers, ads, balances and promotions that are not transactions.
+- Skip transactions that never happened: cancelled, failed or fully refunded ones (e.g. "Dibatalkan", "Dibatalin", "Gagal", "di-refund", or a struck-through amount).`;
 
 export async function handleExtract(req: Request, env: Env): Promise<Response> {
   let body: { images?: unknown; accountHint?: unknown };
