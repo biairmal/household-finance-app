@@ -14,9 +14,11 @@ stateless Cloudflare Worker only brokers Google tokens and runs screenshot extra
 
 | Path | Role |
 |---|---|
-| `src/app/` | Expo Router routes only: every file is a screen, `_layout.tsx` files are navigators |
-| `src/app/spikes/`, `src/spike/` | Plan 1 spike screens and their helpers (Google auth, Drive, prefs, token store). Throwaway: feature code does not import them |
+| `src/app/` | Expo Router routes only: every file is a screen, `_layout.tsx` files are navigators. `(tabs)` holds the v5 tab screens |
+| `src/app/spikes/`, `src/spike/` | Plan 1 spike screens and their helpers (Google auth, Drive, prefs, token store). Frozen until Plan 5 replaces them; feature code does not import them |
 | `src/domain/` | Pure TypeScript money logic and the op-log merge (Plan 2): plain functions over plain data, no React, no I/O |
+| `src/store/` | The local op-log store over SQLite (Plan 3), selectors that feed screens from `src/domain/`, backup |
+| `src/ui/` | Shared components and the theme used by the screens |
 | `src/spike-results.md` | Plan 1 pass/fail record, one row per device check |
 | `edge/` | The Worker (`/oauth/*`, `/extract`), its own `package.json`, vitest tests and `edge/wrangler.jsonc` |
 | `wrangler.jsonc`, `public/_headers`, `workbox-config.js` | The web app's static-files Worker, COOP/COEP headers, service worker |
@@ -28,11 +30,10 @@ Commands are in the [README](README.md#commands). The gate before calling anythi
 
 ```bash
 npx tsc --noEmit
+npm run lint
 npm test
 cd edge && npx vitest run   # when edge/ changed
 ```
-
-ESLint is not set up yet; `npx expo lint` would scaffold it. Set it up in its own change, not as a side effect.
 
 ## Money and data rules
 
