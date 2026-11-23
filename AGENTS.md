@@ -1,41 +1,83 @@
-This is an Expo/React Native mobile application. Prioritize mobile-first patterns, performance, and cross-platform compatibility.
+# AGENTS.md
 
-## Expo has changed — do not trust your training data
+**Before any change, read [CONTRIBUTING.md](CONTRIBUTING.md)** for the plan workflow, git conventions and Definition
+of Done. This file holds the code rules, for humans and AI agents alike. The product and technical spec is
+[docs/design/2026-11-20-household-finance-app-design.md](docs/design/2026-11-20-household-finance-app-design.md)
+("the spec"); the build order is [docs/plans/2026-11-20-roadmap.md](docs/plans/2026-11-20-roadmap.md); the reasons
+behind choices the spec left open are in [docs/DECISIONS.md](docs/DECISIONS.md).
 
-Expo ships breaking changes every SDK release. APIs you remember are likely renamed, moved, or removed. Before writing any code that touches an Expo, EAS, or React Native API:
+## Orientation
 
-1. Read the major version of the `expo` package in `package.json`.
-2. Fetch the matching versioned docs: `https://docs.expo.dev/versions/v<major>.0.0/`
-3. For anything else, fetch https://docs.expo.dev/llms.txt — an index of all Expo docs with corrections to common LLM misconceptions. Follow its links to the specific page you need; never answer from memory.
+Household Money is a finance app for one household on two phones: an Android APK (Expo, native SQLite) and an iPhone
+home-screen web app (Expo web, SQLite in OPFS). The household's data lives in its own Google Drive as an op log; a
+stateless Cloudflare Worker only brokers Google tokens and runs screenshot extraction with Gemini.
 
-## Commands
+| Path | Role |
+|---|---|
+| `src/app/` | Expo Router routes only: every file is a screen, `_layout.tsx` files are navigators |
+| `src/app/spikes/`, `src/spike/` | Plan 1 spike screens and their helpers (Google auth, Drive, prefs, token store). Throwaway: feature code does not import them |
+| `src/domain/` | Pure TypeScript money logic and the op-log merge (Plan 2): plain functions over plain data, no React, no I/O |
+| `src/spike-results.md` | Plan 1 pass/fail record, one row per device check |
+| `edge/` | The Worker (`/oauth/*`, `/extract`), its own `package.json`, vitest tests and `edge/wrangler.jsonc` |
+| `wrangler.jsonc`, `public/_headers`, `workbox-config.js` | The web app's static-files Worker, COOP/COEP headers, service worker |
+| `scripts/` | Extraction scorer (`score-extraction.ts`) and its test |
+| `spikes/screenshots/` | Real bank screenshots for scoring, git-ignored except its README |
+| `docs/` | Spec, plans, decisions ([docs/README.md](docs/README.md) is the index) |
 
-Use `bunx` instead of `npx` if the project uses bun (`bun.lock` present).
+Commands are in the [README](README.md#commands). The gate before calling anything done:
 
 ```bash
-npx expo install <package>  # ALWAYS use instead of npm/yarn/pnpm/bun add — resolves SDK-compatible versions
-npx expo start              # start the dev server
-npx expo lint               # lint
-npx tsc --noEmit            # typecheck
-npx expo-doctor             # diagnose dependency and config issues
-npx expo install --fix      # fix incompatible package versions
+npx tsc --noEmit
+npm test
+cd edge && npx vitest run   # when edge/ changed
 ```
 
-Run lint and typecheck before declaring any task done.
+ESLint is not set up yet; `npx expo lint` would scaffold it. Set it up in its own change, not as a side effect.
 
-## Navigation & Routing
+## Money and data rules
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+These come from the spec (§7.2, §8) and Plan 2's global constraints; the spec wins if they ever disagree.
 
-## Building with EAS
+- Balances, pocket amounts and totals are computed from records every time. Store movements (transactions,
+  allocations, bill payments, balance checks), never a running number.
+- Amounts are integer rupiah. `amount` is always positive; direction comes from `type`.
+- Dates are Asia/Jakarta calendar strings `YYYY-MM-DD`. Do period maths on the strings, keeping them out of UTC
+  `Date` objects.
+- Records with `deletedAt` set are left out of every calculation.
+- Transfers and credit-card payments are neither spending nor income.
+- Display money as `Rp 2.700.000`; negatives use U+2212: `−Rp 2.340.000`.
+- Each device writes only its own files (`ops/<deviceId>/<seq>.jsonl`). Merging ops in any order gives the same state.
+- Duplicates merge automatically only on a matching bank reference or running balance; everything else is offered
+  to the user as "Possible duplicate".
 
-Use EAS to build, sign, and submit the app in the cloud (`eas build`, `eas submit`) and to ship over-the-air updates (`eas update`) — no local Xcode or Android Studio required. Run EAS CLI as `bunx eas-cli <command>` in Bun projects, or `npx eas-cli@latest <command>` otherwise; substitute that for bare `eas` in docs examples.
-Docs: https://docs.expo.dev/eas/index.md
+## Privacy and secrets
 
-## Rules
+- The household owns its data: financial records go to its Drive, and the Worker stays stateless (no storage, no
+  logging of request bodies, tokens or images).
+- Real bank screenshots and their `got.json` stay in `spikes/screenshots/` (git-ignored). Test fixtures use
+  invented data.
+- Secrets go in `edge/.dev.vars` locally and `wrangler secret put` in production. Only `EXPO_PUBLIC_*` values,
+  which ship to the client, go in `.env.local` and EAS environment variables.
 
-- If `ios/` and `android/` directories do not exist, they are generated (Continuous Native Generation). Never create or edit them by hand — configure native behavior in `app.json` and config plugins.
-- Expo Go only includes its bundled native modules. After adding a library with native code, the app needs a development build: `npx expo run:ios|android` locally, or `eas build --profile development`.
-- Prefer recommended Expo modules over third-party libraries, and check your available skills before adding dependencies. Docs: https://docs.expo.dev/versions/latest/index.md
+## Expo and React Native
+
+Expo ships breaking changes every SDK release; this repo is on SDK 58 (`expo` in `package.json`). Before writing
+code that touches an Expo, EAS or React Native API, fetch https://docs.expo.dev/versions/v58.0.0/ or the index at
+https://docs.expo.dev/llms.txt and follow it to the page you need.
+
+- Add packages with `npx expo install <package>` (resolves SDK-compatible versions); in `edge/`, plain `npm install`.
+- Navigation is Expo Router: import `Link`, `router`, `useLocalSearchParams` from `expo-router`. Non-route code lives
+  outside `src/app/`.
+- `ios/` and `android/` are generated (Continuous Native Generation). Configure native behaviour in `app.json` and
+  config plugins.
+- A library with native code needs a new development or EAS build; Expo Go only has its bundled modules.
+- Platform-specific files use the `.web.ts` suffix (see `src/spike/token-store.web.ts`). Every feature works on both
+  the Android APK and the iPhone home-screen app.
+- Prefer Expo modules over third-party libraries. Run EAS as `npx eas-cli@latest <command>`.
+
+## Code
+
+- TypeScript strict. Tests sit next to the code in `__tests__/` or as `*.test.ts`, Jest for the app, vitest in `edge/`.
+- New domain logic starts with a failing test, then the code.
+- Comments describe the code, never its history (no task or plan IDs).
+- When the spec is unclear, pick the simplest option consistent with it and add a row to `docs/DECISIONS.md`.

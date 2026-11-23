@@ -14,6 +14,10 @@ Planning documents for the household finance app, copied from the planning proje
 - [plans/2026-11-20-plan-2-domain-core.md](plans/2026-11-20-plan-2-domain-core.md): Plan 2, the pure TypeScript domain core.
 - [plans/2026-11-21-plan-3-local-store-screens.md](plans/2026-11-21-plan-3-local-store-screens.md): Plan 3, the local op-log store and every v5 screen, offline on one phone.
 
+## Decisions
+
+- [DECISIONS.md](DECISIONS.md): choices made where the spec was silent, with the reason for each.
+
 ## Mockups
 
 The chosen screens are version 5 of the mockup canvas: https://claude.ai/artifact/KvNZnkqRkAadqbaBJBUMaQ (v5 starts at `#artboard-V5Home`, the bottom row).
