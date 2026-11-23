@@ -12,6 +12,7 @@ Planning documents for the household finance app, copied from the planning proje
 - [plans/2026-11-20-roadmap.md](plans/2026-11-20-roadmap.md): build order of the six subsystems. Start here.
 - [plans/2026-11-20-plan-1-spikes.md](plans/2026-11-20-plan-1-spikes.md): Plan 1, spikes that check the risky parts before feature work.
 - [plans/2026-11-20-plan-2-domain-core.md](plans/2026-11-20-plan-2-domain-core.md): Plan 2, the pure TypeScript domain core.
+- [plans/2026-11-21-plan-3-local-store-screens.md](plans/2026-11-21-plan-3-local-store-screens.md): Plan 3, the local op-log store and every v5 screen, offline on one phone.
 
 ## Mockups
 
