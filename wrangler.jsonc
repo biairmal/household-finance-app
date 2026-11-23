@@ -1,0 +1,15 @@
+// The web app (iPhone home-screen PWA), served as static files by a Cloudflare Worker.
+// `npm run deploy` builds dist/ and uploads it. Headers come from public/_headers.
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "household-money",
+  "compatibility_date": "2026-11-18",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "dist",
+    // expo-router "single" output: unknown paths like /spikes/auth get index.html
+    "not_found_handling": "single-page-application"
+  }
+}

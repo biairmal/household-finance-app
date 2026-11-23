@@ -46,3 +46,7 @@ example
 # generated native folders
 /ios
 /android
+
+.dev.vars*
+!.dev.vars.example
+!.env.example

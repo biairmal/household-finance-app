@@ -1,0 +1,17 @@
+// The edge Worker: OAuth token broker + screenshot extraction. Stores nothing.
+// Secrets (set from this folder with `npx wrangler secret put <NAME>`; for local dev put them in edge/.dev.vars):
+//   GOOGLE_CLIENT_SECRET, GEMINI_API_KEY
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "household-money-edge",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "vars": {
+    // Public OAuth client id (also baked into the app); ID tokens must be issued for it.
+    "GOOGLE_CLIENT_ID": "667213073041-af7gari2ckahav9i9ho2jdlfseevsu6k.apps.googleusercontent.com",
+    // Pinned Gemini Flash version. Check https://ai.google.dev/gemini-api/docs/models before changing.
+    "GEMINI_MODEL": "gemini-3.5-flash",
+    // The web app URL (see /wrangler.jsonc), plus local dev.
+    "ALLOWED_ORIGINS": "https://household-money.household-money-edge.workers.dev,http://localhost:8081,http://127.0.0.1:8788"
+  }
+}

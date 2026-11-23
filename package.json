@@ -39,7 +39,8 @@
     "sharp": "^0.35.5",
     "tsx": "^4.23.15",
     "typescript": "~6.0.3",
-    "workbox-cli": "^7.4.1"
+    "workbox-cli": "^7.4.1",
+    "wrangler": "^4.165.0"
   },
   "scripts": {
     "start": "expo start",
@@ -48,7 +49,9 @@
     "lint": "expo lint",
     "test": "jest",
     "build:web": "expo export -p web && workbox generateSW workbox-config.js",
-    "build:android": "eas build -p android --profile preview"
+    "build:android": "eas build -p android --profile preview",
+    "deploy": "npm run build:web && wrangler deploy",
+    "preview": "npm run build:web && wrangler dev"
   },
   "private": true,
   "jest": {

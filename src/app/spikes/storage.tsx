@@ -1,3 +1,4 @@
+import * as Crypto from 'expo-crypto'; // Hermes (Android) has no global crypto
 import * as SQLite from 'expo-sqlite';
 import { useEffect, useState } from 'react';
 import { Button, Platform, StyleSheet, Text, View } from 'react-native';
@@ -31,7 +32,7 @@ export default function StorageSpike() {
       await db.withTransactionAsync(async () => {
         for (let i = 0; i < 100; i++) {
           const now = new Date().toISOString();
-          await db.runAsync('INSERT INTO rows (id, text, createdAt) VALUES (?, ?, ?)', crypto.randomUUID(), `row ${i}`, now);
+          await db.runAsync('INSERT INTO rows (id, text, createdAt) VALUES (?, ?, ?)', Crypto.randomUUID(), `row ${i}`, now);
         }
       });
       await refresh();
